@@ -1,4 +1,4 @@
-name: wiki
+name: wiki-integrity
 
 on:
   push:
@@ -7,12 +7,11 @@ on:
       - ".github/workflows/wiki.yml"
   pull_request:
     paths:
-      - "wiki/**"
-      - ".wiki/**"
       - "tools/**"
+      - ".github/workflows/wiki.yml"
 
 jobs:
-  wiki-integrity:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
