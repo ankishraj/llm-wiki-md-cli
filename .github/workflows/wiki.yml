@@ -1,17 +1,18 @@
-name: ci
+name: wiki
 
 on:
   push:
     paths:
       - "tools/**"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/wiki.yml"
   pull_request:
     paths:
+      - "wiki/**"
+      - ".wiki/**"
       - "tools/**"
-      - ".github/workflows/ci.yml"
 
 jobs:
-  build-and-test:
+  wiki-integrity:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
