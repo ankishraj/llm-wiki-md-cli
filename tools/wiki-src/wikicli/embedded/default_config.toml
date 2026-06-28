@@ -1,0 +1,46 @@
+# Wiki configuration. Behaviour and policy live here; the data model lives in
+# the JSON schema. This file is canonical operational state.
+
+[contract]
+version = "1.0.0"
+
+[schema]
+active = "v1"
+
+[locking]
+# backend: "os" uses OS-level advisory locks (flock / LockFileEx).
+# Set reliable=false for filesystems where advisory locking cannot be trusted
+# (some network mounts); mutation is then refused unless an alternative backend
+# is configured.
+backend = "os"
+reliable = true
+
+[storage]
+max_embedded_source_bytes = 104857600   # 100 MiB
+max_embedded_total_bytes  = 1073741824  # 1 GiB
+large_source_policy = "external"
+
+[index]
+# Hard limits for the generated root index. Exceeding these is a lint error;
+# the root index then links to generated per-category indexes instead.
+max_lines = 200
+max_bytes = 24576
+max_links = 100
+
+[reviews]
+# Default number of scope-intersecting committed operations after which an
+# open review becomes stale. Counts only operations whose scope intersects the
+# review's scope, measured from the review's created_seq.
+default_stale_after_operations = 20
+
+[retrieval]
+# QMD recommendation thresholds (advisory; never auto-installs).
+qmd_recommend_pages = 250
+qmd_recommend_bytes = 5242880          # 5 MiB
+qmd_recommend_median_candidates = 30
+qmd_recommend_benchmark_recall = 0.80
+
+[promotion]
+# Draft promotion supports sparse early-stage projects; stable requires
+# stronger support. See plan section 12.
+allow_single_source_stable_with_approval = true

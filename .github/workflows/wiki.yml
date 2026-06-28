@@ -1,0 +1,51 @@
+name: wiki
+
+on:
+  push:
+    paths:
+      - "wiki/**"
+      - ".wiki/**"
+      - "tools/**"
+      - ".github/workflows/wiki.yml"
+  pull_request:
+    paths:
+      - "wiki/**"
+      - ".wiki/**"
+      - "tools/**"
+
+jobs:
+  wiki-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify wiki.pyz is reproducible and matches its checksum
+        run: |
+          # Rebuild the zipapp and confirm it matches the committed checksum,
+          # proving the committed pyz was built from the committed source.
+          python3 tools/build_pyz.py --out /tmp/wiki-rebuilt.pyz
+          committed="$(awk '{print $1}' tools/wiki.pyz.sha256)"
+          rebuilt="$(sha256sum /tmp/wiki-rebuilt.pyz | awk '{print $1}')"
+          echo "committed: ${committed}"
+          echo "rebuilt:   ${rebuilt}"
+          if [ "${committed}" != "${rebuilt}" ]; then
+            echo "wiki.pyz does not match source; rebuild and commit it." >&2
+            exit 1
+          fi
+          ( cd tools && sha256sum -c wiki.pyz.sha256 )
+
+      - name: Run the test suite
+        run: |
+          pip install jsonschema portalocker pytest --quiet
+          PYTHONPATH=tools/wiki-src pytest tools/wiki-src/tests -q
+
+      - name: wiki lint
+        run: python3 tools/wiki.pyz lint
+
+      - name: wiki verify-diff
+        run: python3 tools/wiki.pyz verify-diff

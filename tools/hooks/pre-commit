@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Wiki pre-commit hook.
+#
+# Install with:  ln -sf ../../tools/hooks/pre-commit .git/hooks/pre-commit
+# (or copy it there). It runs the wiki integrity checks whenever a commit
+# touches wiki/ or .wiki/, blocking commits that fail validation or that leave
+# canonical state inconsistent with the committed operation history.
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "${repo_root}"
+
+# Only run when wiki state is involved.
+if ! git diff --cached --name-only | grep -qE '^(wiki/|\.wiki/)'; then
+  exit 0
+fi
+
+wiki_cmd="${repo_root}/bin/wiki"
+if [[ ! -x "${wiki_cmd}" ]]; then
+  if [[ -f "${repo_root}/tools/wiki.pyz" ]]; then
+    wiki_cmd="python3 ${repo_root}/tools/wiki.pyz"
+  else
+    echo "pre-commit: wiki CLI not found (bin/wiki or tools/wiki.pyz)." >&2
+    exit 1
+  fi
+fi
+
+echo "pre-commit: wiki lint"
+if ! ${wiki_cmd} lint; then
+  echo "pre-commit: wiki lint failed; commit blocked." >&2
+  exit 1
+fi
+
+echo "pre-commit: wiki verify-diff"
+if ! ${wiki_cmd} verify-diff; then
+  echo "pre-commit: wiki verify-diff failed; canonical state is inconsistent " \
+       "with committed operation history. Commit blocked." >&2
+  exit 1
+fi
+
+echo "pre-commit: wiki checks passed."
+exit 0

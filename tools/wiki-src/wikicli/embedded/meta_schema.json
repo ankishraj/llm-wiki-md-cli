@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://wiki.local/meta-schema.json",
+  "title": "Wiki Schema Meta-Schema",
+  "description": "Validates that a project page-schema document is well-formed enough for the CLI to use. This is intentionally permissive about JSON Schema internals (delegated to the jsonschema validator) but strict about the wiki-specific extension keys the CLI relies on.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "type",
+    "properties",
+    "required",
+    "pageTypeDir",
+    "claimRequiredTypes",
+    "limits"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^v[0-9]+$" },
+    "contractVersion": { "type": "string" },
+    "type": { "const": "object" },
+    "properties": {
+      "type": "object",
+      "required": ["id", "type", "title", "status"]
+    },
+    "required": {
+      "type": "array",
+      "items": { "type": "string" },
+      "contains": { "const": "id" }
+    },
+    "pageTypeDir": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string" }
+    },
+    "claimRequiredTypes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "max_page_bytes",
+        "max_heading_count",
+        "root_index_max_lines",
+        "root_index_max_bytes",
+        "root_index_max_links"
+      ],
+      "properties": {
+        "max_page_bytes": { "type": "integer", "minimum": 1024 },
+        "max_heading_count": { "type": "integer", "minimum": 1 },
+        "root_index_max_lines": { "type": "integer", "minimum": 1 },
+        "root_index_max_bytes": { "type": "integer", "minimum": 1 },
+        "root_index_max_links": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

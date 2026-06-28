@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://wiki.local/schemas/v1.json",
+  "title": "Wiki Page Schema v1",
+  "description": "Authoritative contract for page frontmatter. The path-to-type mapping, citation syntax and claim requirements are enforced by the CLI in addition to this schema.",
+  "schemaVersion": "v1",
+  "contractVersion": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "page_id": {
+      "type": "string",
+      "pattern": "^(topic|entity|decision|synthesis|note)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "source_ref": {
+      "type": "string",
+      "description": "source-<slug> optionally with a #fragment locator.",
+      "pattern": "^source-[a-z0-9]+(?:-[a-z0-9]+)*(?:#[A-Za-z0-9._:-]+)?$"
+    },
+    "iso_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    }
+  },
+  "properties": {
+    "id": { "$ref": "#/definitions/page_id" },
+    "type": {
+      "type": "string",
+      "enum": ["topic", "entity", "decision", "synthesis", "note"]
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "status": {
+      "type": "string",
+      "enum": ["active", "draft", "disputed", "stable", "deprecated"]
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/source_ref" },
+      "uniqueItems": true
+    },
+    "tags": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/slug" },
+      "uniqueItems": true
+    },
+    "related": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/page_id" },
+      "uniqueItems": true
+    },
+    "contract_version": { "type": "string" },
+    "created_at": { "$ref": "#/definitions/iso_date" },
+    "updated_at": { "$ref": "#/definitions/iso_date" }
+  },
+  "required": ["id", "type", "title", "summary", "status", "updated_at"],
+  "additionalProperties": false,
+  "pageTypeDir": {
+    "topic": "topics",
+    "entity": "entities",
+    "decision": "decisions",
+    "synthesis": "syntheses",
+    "note": "topics"
+  },
+  "claimRequiredTypes": ["synthesis", "decision"],
+  "limits": {
+    "max_page_bytes": 65536,
+    "max_heading_count": 60,
+    "root_index_max_lines": 200,
+    "root_index_max_bytes": 24576,
+    "root_index_max_links": 100
+  }
+}

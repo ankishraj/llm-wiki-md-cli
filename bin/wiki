@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# wiki — launcher on PATH. Resolves the repo's tools/wiki.pyz relative to this
+# script (following symlinks), picks a Python 3.11+ interpreter, and runs it.
+# Verifies the zipapp checksum when tools/wiki.pyz.sha256 is present
+# (skip with WIKI_SKIP_CHECKSUM=1).
+set -euo pipefail
+
+# Resolve this script's real location even if invoked via a PATH symlink.
+src="${BASH_SOURCE[0]}"
+while [ -h "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  [[ "$src" != /* ]] && src="$dir/$src"
+done
+bindir="$(cd -P "$(dirname "$src")" && pwd)"
+root="$(cd "${bindir}/.." && pwd)"
+pyz="${root}/tools/wiki.pyz"
+
+if [[ ! -f "${pyz}" ]]; then
+  echo "wiki: cannot find ${pyz}." >&2
+  echo "Build it once with: python3 ${root}/tools/build_pyz.py" >&2
+  exit 1
+fi
+
+py=""
+for cand in python3 python; do
+  if command -v "${cand}" >/dev/null 2>&1; then py="${cand}"; break; fi
+done
+if [[ -z "${py}" ]]; then
+  echo "wiki: no python interpreter found on PATH." >&2
+  exit 1
+fi
+
+sumfile="${root}/tools/wiki.pyz.sha256"
+if [[ -f "${sumfile}" && "${WIKI_SKIP_CHECKSUM:-0}" != "1" ]]; then
+  if command -v sha256sum >/dev/null 2>&1; then
+    if ! ( cd "${root}/tools" && sha256sum -c "wiki.pyz.sha256" >/dev/null 2>&1 ); then
+      echo "wiki: wiki.pyz checksum mismatch; refusing to run." >&2
+      echo "Rebuild it or set WIKI_SKIP_CHECKSUM=1 to override." >&2
+      exit 5
+    fi
+  fi
+fi
+
+exec "${py}" "${pyz}" "$@"
